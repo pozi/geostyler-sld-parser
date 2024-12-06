@@ -1,0 +1,223 @@
+import { isGeoStylerFunction, isGeoStylerNumberFunction } from 'geostyler-style/dist/typeguards';
+/**
+ * Cast to Number if it is not a GeoStylerFunction
+ *
+ * @param exp The GeoStylerExpression
+ * @returns The value casted to a number or the GeoStylerNumberFunction
+ */
+export function numberExpression(exp) {
+    return isGeoStylerNumberFunction(exp) ? exp : Number(exp);
+}
+/**
+ * This converts a GeoStylerFunction into a fast-xml-parser representation
+ * of a sld function.
+ *
+ * @param geostylerFunction A GeoStylerFunction
+ * @returns
+ */
+export function geoStylerFunctionToSldFunction(geostylerFunction) {
+    const { name } = geostylerFunction;
+    // TODO: Typing of functions without args should be refactored in geostyler-style
+    if (name === 'pi' || name === 'random') {
+        return [{
+                Function: [],
+                ':@': {
+                    '@_name': name
+                }
+            }];
+    }
+    if (name === 'property') {
+        return {
+            PropertyName: [{
+                    '#text': geostylerFunction.args[0]
+                }]
+        };
+    }
+    const sldFunctionArgs = geostylerFunction.args.map(arg => {
+        if (isGeoStylerFunction(arg)) {
+            const argAsFunction = geoStylerFunctionToSldFunction(arg);
+            return Array.isArray(argAsFunction) ? argAsFunction[0] : argAsFunction;
+        }
+        else {
+            return {
+                Literal: [{
+                        '#text': arg
+                    }]
+            };
+        }
+    });
+    const sldFunctionObj = [{
+            Function: sldFunctionArgs,
+            ':@': {
+                '@_name': name
+            }
+        }];
+    return sldFunctionObj;
+}
+/**
+ * This converts the fast-xml-parser representation of a sld function into
+ * a GeoStylerFunction.
+ *
+ * @param sldFunction An array of objects as created by the fast-xml-parser
+ * @returns The GeoStylerFunction
+ */
+export function sldFunctionToGeoStylerFunction(sldFunction) {
+    const name = sldFunction?.[0]?.[':@']?.['@_name'];
+    const args = sldFunction?.[0].Function.map((sldArg) => {
+        if (sldArg.Function) {
+            return sldFunctionToGeoStylerFunction([sldArg]);
+        }
+        else if (sldArg.PropertyName) {
+            return {
+                name: 'property',
+                args: [sldArg?.PropertyName?.[0]?.['#text']]
+            };
+        }
+        else {
+            return sldArg?.Literal?.[0]?.['#text'];
+        }
+    });
+    const geoStylerFunction = { name };
+    if (args.length > 0) {
+        geoStylerFunction.args = args;
+    }
+    return geoStylerFunction;
+}
+/**
+ * Get all child objects with a given tag name.
+ *
+ * @param elements An array of objects as created by the fast-xml-parser.
+ * @param tagName The tagname to get.
+ * @returns An array of objects as created by the fast-xml-parser.
+ */
+export function getChildren(elements, tagName) {
+    return elements?.filter(obj => Object.keys(obj).includes(tagName));
+}
+/**
+ * Get the child object with a given tag name.
+ *
+ * @param elements An array of objects as created by the fast-xml-parser.
+ * @param tagName The tagname to get.
+ * @returns An object as created by the fast-xml-parser.
+ */
+export function getChild(elements, tagName) {
+    return elements?.find(obj => Object.keys(obj).includes(tagName));
+}
+/**
+ * Get the value of a Css-/SvgParameter.
+ *
+ * @param elements An array of objects as created by the fast-xml-parser.
+ * @param parameter The parameter name to get.
+ * @param sldVersion The sldVersion to distinguish if CssParameter or SvgParameter is used.
+ * @returns The string value of the searched parameter.
+ */
+export function getParameterValue(elements, parameter, sldVersion) {
+    if (!elements) {
+        return undefined;
+    }
+    const paramKey = sldVersion === '1.0.0' ? 'CssParameter' : 'SvgParameter';
+    const element = elements
+        .filter(obj => Object.keys(obj)?.includes(paramKey))
+        .find(obj => obj?.[':@']?.['@_name'] === parameter);
+    // we expected a value but received an array so we check if we have a function
+    if (element?.[paramKey]?.[0]?.Function) {
+        return sldFunctionToGeoStylerFunction(element?.[paramKey]);
+    }
+    // … or a Literal
+    if (element?.[paramKey]?.[0]?.Literal) {
+        return element?.[paramKey]?.[0]?.Literal?.[0]?.['#text'];
+    }
+    return element?.[paramKey]?.[0]?.['#text'];
+}
+/**
+ * Get the attribute value of an object.
+ *
+ * @param obj The object to check.
+ * @param name The name of the attribute
+ * @returns The value of the requested parameter (if available)
+ */
+export function getAttribute(obj, name) {
+    return obj?.[':@']?.[`@_${name}`];
+}
+/**
+ * Determine if a fast-xml-parser object is a symbolizer representation.
+ *
+ * @param obj The object to check.
+ * @returns Whether the passed object is a symbolizer representation or not.
+ */
+export function isSymbolizer(obj) {
+    return Object.keys(obj).some(key => key.endsWith('Symbolizer'));
+}
+/**
+ * Generic get function which tries to get the nested value of the given object or array.
+ * It contains some SLD specific handling and tries to be smart but keep the syntax easy.
+ * It always takes the first child of an array if no index was specified in the path argument.
+ * e.g.
+ *   Get text value: get(sldSymbolizer, 'Graphic.Mark.WellKnownName.#text')
+ *   Get an attribute value: get(sldSymbolizer, 'Graphic.ExternalGraphic.OnlineResource.@xlink:href')
+ *   Get an Css-/SvgParameter value: get(sldSymbolizer, 'Graphic.Mark.Fill.$fill-opacity', '1.1.0')
+ *   Use with an index: get(sldObject, 'StyledLayerDescriptor.NamedLayer[1].UserStyle.Title.#text')
+ *
+ * @param obj A part of the parser result of the fast-xml-parser.
+ * @param path The path to get the value from.
+ * @param sldVersion The SLD version to use.
+ * @returns
+ */
+export function get(obj, path, sldVersion) {
+    const parts = path.split(/\.(.*)/s);
+    let key = parts[0];
+    const rest = parts[1];
+    let target = obj;
+    let index = 0;
+    // handle queries for attributes
+    if (rest?.startsWith('@')) {
+        target = getChildren(obj, key)[index];
+        return getAttribute(target, rest.substring(1));
+    }
+    if (Array.isArray(obj)) {
+        // we expected a value
+        if (key === '#text') {
+            // … so we check if we have a function
+            if (target[0]?.Function) {
+                return sldFunctionToGeoStylerFunction(target);
+            }
+            // … or a Literal
+            if (target[0]?.Literal) {
+                return target[0]?.Literal?.[0]?.['#text'];
+            }
+        }
+        // we expected a value but received an array so we check if we have a function
+        if (key === '#text' && target[0]?.Function) {
+            return sldFunctionToGeoStylerFunction(target);
+        }
+        // handle queries for CssParameter/SvgParameter
+        if (key.startsWith('$') && sldVersion) {
+            return getParameterValue(target, key.substring(1), sldVersion);
+        }
+        // handle queries with specified indexes
+        if (key.endsWith(']')) {
+            index = Number(key.split('[')[1].split(']')[0]);
+            key = key.split('[')[0];
+        }
+        target = getChildren(obj, key)[index];
+    }
+    if (!target) {
+        return undefined;
+    }
+    if (rest) {
+        return get(target[key], rest, sldVersion);
+    }
+    return target[key];
+}
+/**
+ * Returns the keys of an object where the value is equal to the passed in
+ * value.
+ *
+ * @param object The object to get the key from.
+ * @param value The value to get the matching key from.
+ * @return The matching keys.
+ */
+export function keysByValue(object, value) {
+    return Object.keys(object).filter(key => object[key] === value);
+}
+//# sourceMappingURL=SldUtil.js.map

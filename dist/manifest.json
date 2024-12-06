@@ -1,0 +1,7 @@
+{
+  "src/SldStyleParser.ts": {
+    "file": "sldStyleParser.iife.js",
+    "isEntry": true,
+    "src": "src/SldStyleParser.ts"
+  }
+}
