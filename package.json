@@ -30,6 +30,7 @@
     "lint:test:build": "npm run lint && npm run test && npm run build",
     "lint:test": "npm run lint && npm run test",
     "lint": "eslint -c .eslintrc.cjs --ext .ts . && tsc --noEmit --project tsconfig.json",
+    "postinstall": "npm run build",
     "prepublishOnly": "npm run lint:test:build",
     "test-watch": "vitest",
     "test": "vitest run --coverage"
