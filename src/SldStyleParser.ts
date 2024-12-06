@@ -1081,6 +1081,7 @@ export class SldStyleParser implements StyleParser<string> {
       case 'circle':
       case 'square':
       case 'triangle':
+      case 'diamond':
       case 'star':
       case 'cross':
       case 'x':
