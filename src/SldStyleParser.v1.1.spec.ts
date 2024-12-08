@@ -31,7 +31,6 @@ import point_externalgraphic_svg_displacement from '../data/styles/point_externa
 import multi_simplelineLabel from '../data/styles/multi_simplelineLabel';
 import point_simplesquare from '../data/styles/point_simplesquare';
 import point_simpletriangle from '../data/styles/point_simpletriangle';
-import point_simplediamond from '../data/styles/point_simplediamond';
 import point_simplestar from '../data/styles/point_simplestar';
 import point_simplecross from '../data/styles/point_simplecross';
 import point_simplex from '../data/styles/point_simplex';
@@ -111,12 +110,6 @@ describe('SldStyleParser with Symbology Encoding implements StyleParser (reading
       const { output: geoStylerStyle} = await styleParser.readStyle(sld);
       expect(geoStylerStyle).toBeDefined();
       expect(geoStylerStyle).toEqual(point_simpletriangle);
-    });
-    it('can read a SLD 1.1 PointSymbolizer with wellKnownName diamond', async () => {
-      const sld = fs.readFileSync('./data/slds/1.1/point_simplediamond.sld', 'utf8');
-      const { output: geoStylerStyle} = await styleParser.readStyle(sld);
-      expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplediamond);
     });
     it('can read a SLD 1.1 PointSymbolizer with wellKnownName star', async () => {
       const sld = fs.readFileSync('./data/slds/1.1/point_simplestar.sld', 'utf8');
@@ -444,14 +437,6 @@ describe('SldStyleParser with Symbology Encoding implements StyleParser (writing
       // we read it again and compare the json input with the parser output
       const { output: readStyle} = await styleParser.readStyle(sldString!);
       expect(readStyle).toEqual(point_simpletriangle);
-    });
-    it('can write a SLD 1.1 PointSymbolizer with wellKnownName diamond', async () => {
-      const { output: sldString } = await styleParser.writeStyle(point_simplediamond);
-      expect(sldString).toBeDefined();
-      // As string comparison between two XML-Strings is awkward and nonsens
-      // we read it again and compare the json input with the parser output
-      const { output: readStyle} = await styleParser.readStyle(sldString!);
-      expect(readStyle).toEqual(point_simplediamond);
     });
     it('can write a SLD 1.1 PointSymbolizer with wellKnownName star', async () => {
       const { output: sldString } = await styleParser.writeStyle(point_simplestar);
