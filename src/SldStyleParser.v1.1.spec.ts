@@ -10,6 +10,7 @@ import point_simplepoint from '../data/styles/point_simplepoint';
 import line_simpleline from '../data/styles/line_simpleline';
 import line_perpendicularOffset from '../data/styles/line_perpendicularOffset';
 import line_graphicStroke from '../data/styles/line_graphicStroke';
+import line_graphicStroke_2 from '../data/styles/line_graphicStroke_2';
 import line_graphicStroke_externalGraphic from '../data/styles/line_graphicStroke_externalGraphic';
 import line_graphicFill from '../data/styles/line_graphicFill';
 import line_graphicFill_externalGraphic from '../data/styles/line_graphicFill_externalGraphic';
@@ -158,6 +159,12 @@ describe('SldStyleParser with Symbology Encoding implements StyleParser (reading
       const { output: geoStylerStyle} = await styleParser.readStyle(sld);
       expect(geoStylerStyle).toBeDefined();
       expect(geoStylerStyle).toEqual(line_graphicStroke);
+    });
+    it('can read a SLD 1.1 LineSymbolizer with GraphicStroke v2', async () => {
+      const sld = fs.readFileSync('./data/slds/1.1/line_graphicStroke_2.sld', 'utf8');
+      const { output: geoStylerStyle} = await styleParser.readStyle(sld);
+      expect(geoStylerStyle).toBeDefined();
+      expect(geoStylerStyle).toEqual(line_graphicStroke_2);
     });
     it('can read a SLD 1.1 LineSymbolizer with GraphicStroke and ExternalGraphic', async () => {
       const sld = fs.readFileSync('./data/slds/1.1/line_graphicStroke_externalGraphic.sld', 'utf8');
@@ -501,6 +508,14 @@ describe('SldStyleParser with Symbology Encoding implements StyleParser (writing
       // we read it again and compare the json input with the parser output
       const { output: readStyle} = await styleParser.readStyle(sldString!);
       expect(readStyle).toEqual(line_graphicStroke);
+    });
+    it('can write a SLD 1.1 LineSymbolizer with GraphicStroke v2', async () => {
+      const { output: sldString } = await styleParser.writeStyle(line_graphicStroke_2);
+      expect(sldString).toBeDefined();
+      // As string comparison between two XML-Strings is awkward and nonsens
+      // we read it again and compare the json input with the parser output
+      const { output: readStyle} = await styleParser.readStyle(sldString!);
+      expect(readStyle).toEqual(line_graphicStroke_2);
     });
     it('can write a SLD 1.1 LineSymbolizer with GraphicStroke and ExternalGraphic', async () => {
       const { output: sldString } = await styleParser.writeStyle(line_graphicStroke_externalGraphic);

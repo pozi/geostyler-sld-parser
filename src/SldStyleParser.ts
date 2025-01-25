@@ -1094,6 +1094,7 @@ export class SldStyleParser implements StyleParser<string> {
       case 'half_square':
       case 'heart':
       case 'hexagon':
+      case 'horline':
       case 'left_half_triangle':
       case 'line':
       case 'octagon':
