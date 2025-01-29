@@ -9,7 +9,7 @@
 # production
 /build
 /browser
-/dist
+# /dist
 
 # history
 /.history
