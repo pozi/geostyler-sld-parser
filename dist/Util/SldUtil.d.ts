@@ -5,7 +5,7 @@ import { GeoStylerFunction, GeoStylerNumberFunction } from 'geostyler-style/dist
  * Cast to Number if it is not a GeoStylerFunction
  *
  * @param exp The GeoStylerExpression
- * @returns The value casted to a number or the GeoStylerNumberFunction
+ * @returns The value cast to a number or the GeoStylerNumberFunction
  */
 export declare function numberExpression(exp: Expression<PropertyType>): GeoStylerNumberFunction | number;
 /**
@@ -28,18 +28,19 @@ export declare function sldFunctionToGeoStylerFunction(sldFunction: any[]): GeoS
  * Get all child objects with a given tag name.
  *
  * @param elements An array of objects as created by the fast-xml-parser.
- * @param tagName The tagname to get.
+ * @param tagName The tagName to get.
  * @returns An array of objects as created by the fast-xml-parser.
  */
 export declare function getChildren(elements: any[], tagName: string): any[];
 /**
- * Get the child object with a given tag name.
+ * Get the value of a parameter from a specific objects in a list of sld elements.
  *
  * @param elements An array of objects as created by the fast-xml-parser.
- * @param tagName The tagname to get.
- * @returns An object as created by the fast-xml-parser.
+ * @param paramKey The name of the parameter to find in the elements.
+ * @param parameter The parameter name to get.
+ * @returns The string value of the searched parameter.
  */
-export declare function getChild(elements: any[], tagName: string): any;
+export declare function getTextValueInSldObject(elements: any[], parameter: string, paramKey: string): any;
 /**
  * Get the value of a Css-/SvgParameter.
  *
@@ -49,6 +50,14 @@ export declare function getChild(elements: any[], tagName: string): any;
  * @returns The string value of the searched parameter.
  */
 export declare function getParameterValue(elements: any[], parameter: string, sldVersion: SldVersion): any;
+/**
+ * Get the value of a (GeoServer) VendorOption.
+ *
+ * @param elements An array of objects as created by the fast-xml-parser.
+ * @param name The vendorOption name to get.
+ * @returns The string value of the searched parameter.
+ */
+export declare function getVendorOptionValue(elements: any[], name: string): any;
 /**
  * Get the attribute value of an object.
  *
@@ -71,7 +80,7 @@ export declare function isSymbolizer(obj: any): boolean;
  * e.g.
  *   Get text value: get(sldSymbolizer, 'Graphic.Mark.WellKnownName.#text')
  *   Get an attribute value: get(sldSymbolizer, 'Graphic.ExternalGraphic.OnlineResource.@xlink:href')
- *   Get an Css-/SvgParameter value: get(sldSymbolizer, 'Graphic.Mark.Fill.$fill-opacity', '1.1.0')
+ *   Get a Css-/SvgParameter value: get(sldSymbolizer, 'Graphic.Mark.Fill.$fill-opacity', '1.1.0')
  *   Use with an index: get(sldObject, 'StyledLayerDescriptor.NamedLayer[1].UserStyle.Title.#text')
  *
  * @param obj A part of the parser result of the fast-xml-parser.

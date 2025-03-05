@@ -8,6 +8,7 @@ export type ConstructorParams = {
     numericFilterFields?: string[];
     boolFilterFields?: string[];
     sldVersion?: SldVersion;
+    withGeoServerVendorOption?: boolean;
     symbolizerUnits?: string;
     parserOptions?: ParserOptions;
     builderOptions?: XmlBuilderOptions;
@@ -110,6 +111,19 @@ export declare class SldStyleParser implements StyleParser<string> {
      * @param sldVersion The _sldVersion value to set
      */
     set sldVersion(sldVersion: SldVersion);
+    /**
+     * Indicates whether additional GeoServer vendorOption should be included in
+     * sld write/parse operations. Set to `false` by default.
+     */
+    private _withGeoServerVendorOption;
+    /**
+     * Getter for _withGeoServerVendorOption
+     */
+    get withGeoServerVendorOption(): boolean;
+    /**
+     * Setter for _withGeoServerVendorOption
+     */
+    set withGeoServerVendorOption(withVendorOption: boolean);
     /**
      * String indicating the SLD version used in reading mode
      */
@@ -381,6 +395,23 @@ export declare class SldStyleParser implements StyleParser<string> {
      * @return The object representation of a SLD PointSymbolizer with a Mark
      */
     getSldPointSymbolizerFromMarkSymbolizer(markSymbolizer: MarkSymbolizer): any;
+    /**
+     * Push a new GeoServerVendorOption in the given array if such options are allowed.
+     */
+    pushGeoServerVendorOption(elementArray: any[], name: string, text: string): void;
+    /**
+     * @returns <VendorOption name="name">text</VendorOption>
+     */
+    createGeoServerVendorOption(name: string, text: string): {
+        [x: string]: {
+            '#text': string;
+        }[] | {
+            '@_name': string;
+        };
+        ':@': {
+            '@_name': string;
+        };
+    };
     /**
      * Get the SLD Object (readable with fast-xml-parser) from a geostyler-style IconSymbolizer.
      *
