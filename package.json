@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "fast-xml-parser": "^4.4.1",
-    "geostyler-style": "github:pozi/geostyler-style#v1.0.2",
+    "geostyler-style": "github:pozi/geostyler-style#v1.0.3",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
